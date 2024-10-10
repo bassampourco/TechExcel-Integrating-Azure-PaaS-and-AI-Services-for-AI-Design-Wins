@@ -1,0 +1,10 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "sqlAdminPassword": {
+        "value": "g@G9@2nD7C1BP%uh"
+      }
+    }
+  }
+  
