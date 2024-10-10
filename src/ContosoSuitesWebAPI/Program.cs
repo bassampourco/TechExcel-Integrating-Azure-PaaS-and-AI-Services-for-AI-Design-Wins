@@ -48,13 +48,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/", async () => 
-{
-    return "Welcome to the Contoso Suites Web API!";
-})
-    .WithName("Index")
-    .WithOpenApi();
-
 app.MapGet("/Hotels", async () => 
 {
     var hotels = await app.Services.GetRequiredService<IDatabaseService>().GetHotels();
