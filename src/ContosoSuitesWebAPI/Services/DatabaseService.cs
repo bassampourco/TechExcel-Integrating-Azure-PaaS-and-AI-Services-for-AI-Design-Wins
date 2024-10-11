@@ -8,7 +8,7 @@ namespace ContosoSuitesWebAPI.Services;
 
 public class DatabaseService : IDatabaseService
 {
-    [KernelFunction]
+    [KernelFunction("get_hotels")]
     [Description("Get all hotels.")]
     public async Task<IEnumerable<Hotel>> GetHotels()
     {
@@ -35,8 +35,6 @@ public class DatabaseService : IDatabaseService
         return hotels;
     }
 
-    [KernelFunction]
-    [Description("Get all bookings for a single hotel.")]
     public async Task<IEnumerable<Booking>> GetBookingsForHotel(int hotelId)
     {
         var sql = "SELECT BookingID, CustomerID, HotelID, StayBeginDate, StayEndDate, NumberOfGuests FROM dbo.Booking WHERE HotelID = @HotelID";
@@ -65,8 +63,6 @@ public class DatabaseService : IDatabaseService
         return bookings;
     }
 
-    [KernelFunction]
-    [Description("Get all bookings for a single hotel with minimum staying days.")]
     public async Task<IEnumerable<Booking>> GetBookingsByHotelAndMinimumDate(int hotelId, DateTime dt)
     {
         var sql = "SELECT BookingID, CustomerID, HotelID, StayBeginDate, StayEndDate, NumberOfGuests FROM dbo.Booking WHERE HotelID = @HotelID AND StayBeginDate >= @StayBeginDate";
@@ -96,91 +92,3 @@ public class DatabaseService : IDatabaseService
         return bookings;
     }
 }
-    [KernelFunction]
-    [Description("Get all bookings for a single missing hotel room.")]
-    public async Task<IEnumerable<Booking>> GetBookingsMissingHotelRooms()
-    {
-        var sql = """
-            SELECT
-                b.BookingID,
-                b.CustomerID,
-                b.HotelID,
-                b.StayBeginDate,
-                b.StayEndDate,
-                b.NumberOfGuests
-            FROM dbo.Booking b
-            WHERE NOT EXISTS
-                (
-                    SELECT 1
-                    FROM dbo.BookingHotelRoom h
-                    WHERE
-                        b.BookingID = h.BookingID
-                );
-            """;
-        using var conn = new SqlConnection(
-            connectionString: Environment.GetEnvironmentVariable("SQLCONNSTR_ContosoSuites")!
-        );
-        conn.Open();
-        using var cmd = new SqlCommand(sql, conn);
-        using var reader = await cmd.ExecuteReaderAsync();
-        var bookings = new List<Booking>();
-        while (await reader.ReadAsync())
-        {
-            bookings.Add(new Booking
-            {
-                BookingID = reader.GetInt32(0),
-                CustomerID = reader.GetInt32(1),
-                HotelID = reader.GetInt32(2),
-                StayBeginDate = reader.GetDateTime(3),
-                StayEndDate = reader.GetDateTime(4),
-                NumberOfGuests = reader.GetInt32(5)
-            });
-        }
-        conn.Close();
-  
-        return bookings;
-    }
-    [KernelFunction]
-    [Description("Get all bookings for a single hotel with multiple rooms.")]
-    public async Task<IEnumerable<Booking>> GetBookingsWithMultipleHotelRooms()
-    {
-        var sql = """
-            SELECT
-                b.BookingID,
-                b.CustomerID,
-                b.HotelID,
-                b.StayBeginDate,
-                b.StayEndDate,
-                b.NumberOfGuests
-            FROM dbo.Booking b
-            WHERE
-                (
-                    SELECT COUNT(1)
-                    FROM dbo.BookingHotelRoom h
-                    WHERE
-                        b.BookingID = h.BookingID
-                ) > 1;
-            """;
-        using var conn = new SqlConnection(
-            connectionString: Environment.GetEnvironmentVariable("SQLCONNSTR_ContosoSuites")!
-        );
-        conn.Open();
-        using var cmd = new SqlCommand(sql, conn);
-        using var reader = await cmd.ExecuteReaderAsync();
-        var bookings = new List<Booking>();
-        while (await reader.ReadAsync())
-        {
-            bookings.Add(new Booking
-            {
-                BookingID = reader.GetInt32(0),
-                CustomerID = reader.GetInt32(1),
-                HotelID = reader.GetInt32(2),
-                StayBeginDate = reader.GetDateTime(3),
-                StayEndDate = reader.GetDateTime(4),
-                NumberOfGuests = reader.GetInt32(5)
-            });
-        }
-        conn.Close();
-  
-        return bookings;
-    }
